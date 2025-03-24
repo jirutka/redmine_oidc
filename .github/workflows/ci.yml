@@ -16,15 +16,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # We test against the latest Redmine stable and the master versions
         redmine:
           - '5.0-stable'
           - '5.1-stable'
+          - '6.0-stable'
         ruby:
           - '3.1'
           - '3.2'
+          - '3.3'
         exclude:
           - { redmine: '5.0-stable', ruby: '3.2' }
+          - { redmine: '5.0-stable', ruby: '3.3' }
+          - { redmine: '5.1-stable', ruby: '3.3' }
 
     steps:
     # We checkout Redmine itself, since plugins can only be tested inside a running Redmine
