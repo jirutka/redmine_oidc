@@ -58,6 +58,9 @@ explicitly with
 issuer_url::
     A discovery URL to your realm
 
+    If you change this, you must wipe out the Redis cache (the easiest way is
+    to stop Redis, delete +dump.rdb+, and start it again).
+
     Example: +https://keycloak.your-company.com/auth/realms/your-realm+
 client_id::
     The client ID in ID provider, that is responsible for authentication.
