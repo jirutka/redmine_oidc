@@ -20,11 +20,11 @@ require_relative 'lib/redmine_oidc'
 
 Redmine::Plugin.register :redmine_oidc do
   name 'Redmine OpenId Connect plugin'
-  author 'Contargo GmbH & Co. KG'
+  author 'Jakub Jirutka'
   description 'Add login with OpenId Connect as another login option'
   version '1.5.0'
-  url 'https://github.com/Contargo/redmine_oidc'
-  author_url 'https://contargo.net'
+  url 'https://github.com/jirutka/redmine_oidc'
+  author_url 'https://github.com/jirutka'
   settings :default => {:enabled => false},
            :partial => 'settings/redmine_oidc'
 end
