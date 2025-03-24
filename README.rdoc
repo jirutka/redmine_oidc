@@ -7,6 +7,10 @@ If you are not familiar with OpenID Connect visit
 {OpenID Connect explained}[https://connect2id.com/learn/openid-connect]
 as a primer.
 
+This project is a fork of
+{Contargo/redmine_oidc}[https://github.com/Contargo/redmine_oidc] which is de
+facto unmaintained.
+
 
 == Setup
 
