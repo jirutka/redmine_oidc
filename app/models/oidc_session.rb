@@ -68,6 +68,10 @@ class OidcSession
 
   def refresh!
     oidc_client.refresh_token = @refresh_token
+    # XXX: Refreshed id_token doesn't have the nonce claim, but #verify! always
+    #  passes the nonce to IdToken#verify! and it's called on every request.
+    #  See https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.12.2
+    @nonce = nil
     parse(oidc_client.access_token!)
   end
 
@@ -83,7 +87,7 @@ class OidcSession
     decoded_id_token.verify!(
       issuer: settings.issuer_url,
       client_id: settings.client_id,
-      nonce: oidc_nonce,
+      nonce: nonce,
     )
   end
 
