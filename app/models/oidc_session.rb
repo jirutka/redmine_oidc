@@ -180,7 +180,13 @@ class OidcSession
     @access_token = access_token.access_token
     @refresh_token = access_token.refresh_token
     @id_token = access_token.id_token
+
+    # Invalidate cached values.
     @decoded_id_token = nil
+    @decoded_refresh_token = nil
+    @oidc_indentifier = nil
+    @roles = nil
+    @groups = nil
   end
 
   def verify_refreshed_id_token!(previous)
