@@ -207,6 +207,16 @@ class OidcSession
       raise OpenIDConnect::ResponseObject::IdToken::InvalidToken,
         'Refreshed ID token authentication time has changed'
     end
+
+    if settings.unique_id_claim != 'sub'
+      claim = settings.unique_id_claim
+      prev_id = previous.raw_attributes[claim]
+
+      unless prev_id.present? && prev_id == current.raw_attributes[claim]
+        raise OpenIDConnect::ResponseObject::IdToken::InvalidToken,
+          "Refreshed ID token #{claim.inspect} has changed or is missing"
+      end
+    end
   end
 
   def roles
