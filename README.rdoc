@@ -70,6 +70,15 @@ client_secret::
     The client secret to allow access by your trusted agent, i.e. a browser.
 
     Example: +3618459c-f1f6-11ea-af1a-c7ab620b9443+
+pkce_enabled::
+  Enable Proof Key for Code Exchange (PKCE) using the S256 challenge method.
+  This provides additional protection against authorization code interception
+  and injection attacks.
+
+  Disabled by default for backward compatibility. The OIDC provider must
+  support PKCE S256. If the provider requires PKCE, this option must be enabled.
+
+  Default: +false+
 scope::
     The scopes which are requested from your ID provider.
 

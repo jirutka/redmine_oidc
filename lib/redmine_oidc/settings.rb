@@ -33,6 +33,7 @@ module RedmineOidc
       admin_role
       groups_claim
       group_names_pattern
+      pkce_enabled
       create_user_if_not_exists
       session_check_enabled
       session_check_users_csv
@@ -80,6 +81,10 @@ module RedmineOidc
 
     def update_groups?
       !!@groups_claim
+    end
+
+    def pkce_enabled?
+      ActiveModel::Type::Boolean.new.cast(pkce_enabled)
     end
 
     def session_check_users

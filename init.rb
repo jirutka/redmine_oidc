@@ -25,6 +25,6 @@ Redmine::Plugin.register :redmine_oidc do
   version '2.0.1'
   url 'https://github.com/jirutka/redmine_oidc'
   author_url 'https://github.com/jirutka'
-  settings :default => {:enabled => false},
+  settings :default => {:enabled => false, :pkce_enabled => false},
            :partial => 'settings/redmine_oidc'
 end

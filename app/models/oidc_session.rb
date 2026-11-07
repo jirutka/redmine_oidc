@@ -14,13 +14,15 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+require 'base64'
+require 'digest'
 
 class OidcSession
   include ActiveModel::Model
   include ActiveModel::Serialization
 
-  attr_accessor :session, :redirect_uri, :state, :nonce, :pending_nonce, :code, :session_state
-  attr_accessor :id_token, :access_token, :refresh_token
+  attr_accessor :session, :redirect_uri, :state, :nonce, :pending_nonce, :pending_code_verifier
+  attr_accessor :code, :session_state, :id_token, :access_token, :refresh_token
 
   private_class_method :new
 
@@ -38,15 +40,29 @@ class OidcSession
   def authorization_endpoint(redirect_uri:, max_age: nil)
     @redirect_uri = redirect_uri
     @pending_nonce = SecureRandom.uuid
-    save!
+
     # Reuse the nonce as OAuth state to bind the callback to this authorization
     # request. It is validated as state on callback and as nonce in the ID token.
-    oidc_client.authorization_uri(
+    params = {
       nonce: @pending_nonce,
       state: @pending_nonce,
       scope: oidc_scope,
       max_age: max_age,
-    )
+    }
+
+    if settings.pkce_enabled?
+      @pending_code_verifier = SecureRandom.urlsafe_base64(32)
+      params[:code_challenge] = Base64.urlsafe_encode64(
+        Digest::SHA256.digest(@pending_code_verifier),
+        padding: false
+      )
+      params[:code_challenge_method] = 'S256'
+    else
+      @pending_code_verifier = nil
+    end
+
+    save!
+    oidc_client.authorization_uri(params)
   end
 
   def end_session_endpoint(post_logout_redirect_uri:)
@@ -68,13 +84,14 @@ class OidcSession
     raise ArgumentError, 'No pending OIDC authorization' unless @pending_nonce.present?
 
     oidc_client.authorization_code = @code
-    access_token = oidc_client.access_token!
+    access_token = oidc_client.access_token!(code_verifier: @pending_code_verifier)
 
     @nonce = @pending_nonce
     @pending_nonce = nil
     assign_tokens(access_token)
 
     verify!
+    @pending_code_verifier = nil
     raise ArgumentError,
       "Missing OIDC identifier claim #{settings.unique_id_claim.inspect}" if oidc_identifier.blank?
     save!
@@ -290,6 +307,7 @@ class OidcSession
       'state' => nil,
       'nonce' => nil,
       'pending_nonce' => nil,
+      'pending_code_verifier' => nil,
       'code' => nil,
       'session_state' => nil,
       'id_token' => nil,

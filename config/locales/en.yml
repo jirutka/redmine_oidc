@@ -37,6 +37,7 @@ en:
       groups_claim: Groups claim (optional)
       group_names_pattern: Regex to filter names of groups that should be synchronized
       group_names_pattern_placeholder: ^$
+      pkce_enabled: Enable PKCE (S256)
       create_user_if_not_exists: Create user if not exists
       session_check_enabled: Enable session check
       session_check_users_csv: Comma-separated list of logins with session check (* = all)
