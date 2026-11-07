@@ -72,7 +72,6 @@ class OidcSession
 
     @nonce = @pending_nonce
     @pending_nonce = nil
-    @decoded_id_token = nil
     assign_tokens(access_token)
 
     verify!
@@ -84,7 +83,6 @@ class OidcSession
   def refresh!
     oidc_client.refresh_token = @refresh_token
     access_token = oidc_client.access_token!
-
     raise 'Missing ID token in refresh response' if access_token.id_token.blank?
 
     # XXX: Refreshed id_token doesn't have the nonce claim, but #verify! always
@@ -93,10 +91,12 @@ class OidcSession
     @nonce = nil
 
     old_refresh_token = @refresh_token
+    old_id_token = decoded_id_token
     assign_tokens(access_token)
     # A refresh response may omit a new refresh token; retain the existing one.
     @refresh_token ||= old_refresh_token
 
+    verify_refreshed_id_token!(old_id_token)
     save!
   end
 
@@ -180,6 +180,27 @@ class OidcSession
     @access_token = access_token.access_token
     @refresh_token = access_token.refresh_token
     @id_token = access_token.id_token
+    @decoded_id_token = nil
+  end
+
+  def verify_refreshed_id_token!(previous)
+    verify!
+    current = decoded_id_token
+
+    unless current.sub == previous.sub
+      raise OpenIDConnect::ResponseObject::IdToken::InvalidToken,
+        'Refreshed ID token subject has changed'
+    end
+
+    unless Array(current.aud).to_set == Array(previous.aud).to_set
+      raise OpenIDConnect::ResponseObject::IdToken::InvalidToken,
+        'Refreshed ID token audience has changed'
+    end
+
+    unless current.auth_time == previous.auth_time
+      raise OpenIDConnect::ResponseObject::IdToken::InvalidToken,
+        'Refreshed ID token authentication time has changed'
+    end
   end
 
   def roles
