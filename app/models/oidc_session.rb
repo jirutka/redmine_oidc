@@ -71,6 +71,9 @@ class OidcSession
     access_token = oidc_client.access_token!
     @nonce = @pending_nonce
     @pending_nonce = nil
+    @id_token = access_token.id_token
+    @decoded_id_token = nil
+    verify!
     parse(access_token)
   end
 
