@@ -69,12 +69,14 @@ class OidcSession
 
     oidc_client.authorization_code = @code
     access_token = oidc_client.access_token!
+
     @nonce = @pending_nonce
     @pending_nonce = nil
-    @id_token = access_token.id_token
     @decoded_id_token = nil
+    assign_tokens(access_token)
+
     verify!
-    parse(access_token)
+    save!
   end
 
   def refresh!
@@ -83,7 +85,8 @@ class OidcSession
     #  passes the nonce to IdToken#verify! and it's called on every request.
     #  See https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.12.2
     @nonce = nil
-    parse(oidc_client.access_token!)
+    assign_tokens(oidc_client.access_token!)
+    save!
   end
 
   def destroy!
@@ -162,11 +165,10 @@ class OidcSession
 
   private
 
-  def parse(access_token)
+  def assign_tokens(access_token)
     @access_token = access_token.access_token
     @refresh_token = access_token.refresh_token
     @id_token = access_token.id_token
-    save!
   end
 
   def roles
