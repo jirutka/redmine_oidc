@@ -19,7 +19,7 @@ class OidcSession
   include ActiveModel::Model
   include ActiveModel::Serialization
 
-  attr_accessor :session, :redirect_uri, :state, :nonce, :code, :session_state
+  attr_accessor :session, :redirect_uri, :state, :nonce, :pending_nonce, :code, :session_state
   attr_accessor :id_token, :access_token, :refresh_token
 
   private_class_method :new
@@ -37,10 +37,11 @@ class OidcSession
 
   def authorization_endpoint(redirect_uri:, max_age: nil)
     @redirect_uri = redirect_uri
+    @pending_nonce = SecureRandom.uuid
     save!
     oidc_client.authorization_uri(
-      nonce: oidc_nonce,
-      state: oidc_nonce,
+      nonce: @pending_nonce,
+      state: @pending_nonce,
       scope: oidc_scope,
       max_age: max_age,
     )
@@ -62,8 +63,13 @@ class OidcSession
   end
 
   def acquire!
+    raise ArgumentError, 'No pending OIDC authorization' unless @pending_nonce.present?
+
     oidc_client.authorization_code = @code
-    parse(oidc_client.access_token!)
+    access_token = oidc_client.access_token!
+    @nonce = @pending_nonce
+    @pending_nonce = nil
+    parse(access_token)
   end
 
   def refresh!
@@ -208,14 +214,6 @@ class OidcSession
   rescue OpenIDConnect::Discovery::DiscoveryFailed => e
   end
 
-  def oidc_nonce
-    if !@nonce
-      @nonce = SecureRandom.uuid
-      save!
-    end
-    @nonce
-  end
-
   def settings
     @settings ||= RedmineOidc.settings
   end
@@ -225,6 +223,7 @@ class OidcSession
       'redirect_uri' => nil,
       'state' => nil,
       'nonce' => nil,
+      'pending_nonce' => nil,
       'code' => nil,
       'session_state' => nil,
       'id_token' => nil,
