@@ -167,6 +167,12 @@ class OidcController < ApplicationController
       elsif reauth_requested_at.nil? || oidc_session.auth_time < reauth_requested_at
         logger.warn "OIDC sudo reauthentication was not fresh for user #{user.id}"
         :forbidden
+      elsif !oidc_session.authorized?
+        logger.warn "OIDC access revoked during sudo reauthentication for user #{user.id}"
+        :forbidden
+      elsif !oidc_session.user_attributes[:sudoer]
+        logger.warn "OIDC admin role missing during sudo reauthentication for user #{user.id}"
+        :forbidden
       end
 
     if error_status
