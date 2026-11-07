@@ -40,7 +40,7 @@ class OidcController < ApplicationController
     oidc_session.acquire!
 
     if session.has_key?(:oidc_sudo_deferred) && User.current.logged?
-      perform_sudo_action
+      complete_sudo_reauthentication(oidc_session)
     elsif oidc_session.authorized?
       login_user
     else
@@ -150,6 +150,26 @@ class OidcController < ApplicationController
   def unsuccessful_login(user)
     user.errors.full_messages.each do |error|
       logger.warn "Could not create user #{user.login}: #{error}"
+    end
+  end
+
+  def complete_sudo_reauthentication(oidc_session)
+    user = User.current
+
+    error_status =
+      if user.oidc_identifier.blank?
+        logger.error "Missing OIDC identifier for Redmine user #{user.id}"
+        :internal_server_error
+      elsif oidc_session.oidc_identifier != user.oidc_identifier
+        logger.warn "OIDC identity mismatch during sudo reauthentication for user #{user.id}"
+        :forbidden
+      end
+
+    if error_status
+      logout_user
+      render plain: 'OIDC sudo reauthentication failed', status: error_status
+    else
+      perform_sudo_action
     end
   end
 
