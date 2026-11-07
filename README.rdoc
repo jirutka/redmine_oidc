@@ -12,6 +12,12 @@ This project is a fork of
 facto unmaintained.
 
 
+== Requirements
+
+* Redmine 6.1 or later
+* {redmine_sudo}[https://github.com/alphanodes/redmine_sudo/] 1.x (optional)
+
+
 == Setup
 
 === Migrations
