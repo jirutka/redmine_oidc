@@ -48,7 +48,9 @@ class OidcController < ApplicationController
     end
   rescue Exception => exception
     logger.error "#{exception.class}: #{exception.message}"
-    render 'callback', :status => :loop_detected
+    # FIXME: Handle expected OIDC errors with appropriate HTTP status codes
+    #  and let unexpected exceptions propagate to Rails.
+    render 'callback', :status => :internal_server_error
   end
 
   def logout
