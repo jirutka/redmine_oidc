@@ -172,7 +172,10 @@ class OidcSession
   end
 
   def roles
-    @roles ||= decoded_id_token.raw_attributes[settings.roles_claim].map(&:downcase).to_set
+    @roles ||= decoded_id_token.raw_attributes
+      .fetch(settings.roles_claim, [])
+      .map(&:downcase)
+      .to_set
   end
 
   def access_roles
