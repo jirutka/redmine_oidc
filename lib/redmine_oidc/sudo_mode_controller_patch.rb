@@ -43,6 +43,7 @@ module RedmineOidc
 
       session[:oidc_sudo_deferred] = {
         back_url: back_url,
+        reauth_requested_at: Time.current.to_i,
         params: params.slice(*param_names).to_unsafe_hash,
         options: {
           method: request.method_symbol,

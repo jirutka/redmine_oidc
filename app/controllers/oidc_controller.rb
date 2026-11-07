@@ -155,6 +155,7 @@ class OidcController < ApplicationController
 
   def complete_sudo_reauthentication(oidc_session)
     user = User.current
+    reauth_requested_at = session[:oidc_sudo_deferred][:reauth_requested_at]
 
     error_status =
       if user.oidc_identifier.blank?
@@ -162,6 +163,9 @@ class OidcController < ApplicationController
         :internal_server_error
       elsif oidc_session.oidc_identifier != user.oidc_identifier
         logger.warn "OIDC identity mismatch during sudo reauthentication for user #{user.id}"
+        :forbidden
+      elsif reauth_requested_at.nil? || oidc_session.auth_time < reauth_requested_at
+        logger.warn "OIDC sudo reauthentication was not fresh for user #{user.id}"
         :forbidden
       end
 
