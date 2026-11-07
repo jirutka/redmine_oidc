@@ -83,11 +83,20 @@ class OidcSession
 
   def refresh!
     oidc_client.refresh_token = @refresh_token
+    access_token = oidc_client.access_token!
+
+    raise 'Missing ID token in refresh response' if access_token.id_token.blank?
+
     # XXX: Refreshed id_token doesn't have the nonce claim, but #verify! always
     #  passes the nonce to IdToken#verify! and it's called on every request.
     #  See https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.12.2
     @nonce = nil
-    assign_tokens(oidc_client.access_token!)
+
+    old_refresh_token = @refresh_token
+    assign_tokens(access_token)
+    # A refresh response may omit a new refresh token; retain the existing one.
+    @refresh_token ||= old_refresh_token
+
     save!
   end
 
