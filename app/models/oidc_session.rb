@@ -76,6 +76,8 @@ class OidcSession
     assign_tokens(access_token)
 
     verify!
+    raise ArgumentError,
+      "Missing OIDC identifier claim #{settings.unique_id_claim.inspect}" if oidc_identifier.blank?
     save!
   end
 
