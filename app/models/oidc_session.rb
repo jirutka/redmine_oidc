@@ -39,6 +39,8 @@ class OidcSession
     @redirect_uri = redirect_uri
     @pending_nonce = SecureRandom.uuid
     save!
+    # Reuse the nonce as OAuth state to bind the callback to this authorization
+    # request. It is validated as state on callback and as nonce in the ID token.
     oidc_client.authorization_uri(
       nonce: @pending_nonce,
       state: @pending_nonce,
@@ -95,6 +97,14 @@ class OidcSession
       client_id: settings.client_id,
       nonce: nonce,
     )
+  end
+
+  def validate_state!(state)
+    raise ArgumentError, 'No pending OIDC authorization' unless @pending_nonce.present?
+
+    unless state.is_a?(String) && ::ActiveSupport::SecurityUtils.secure_compare(@pending_nonce, state)
+      raise ArgumentError, 'Invalid OIDC state'
+    end
   end
 
   def oidc_identifier

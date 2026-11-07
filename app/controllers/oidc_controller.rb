@@ -35,6 +35,7 @@ class OidcController < ApplicationController
 
   def callback
     oidc_session = OidcSession.spawn(session)
+    oidc_session.validate_state!(params[:state])
     oidc_session.update!(params)
     oidc_session.acquire!
 
