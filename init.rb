@@ -22,7 +22,7 @@ Redmine::Plugin.register :redmine_oidc do
   name 'Redmine OpenId Connect plugin'
   author 'Jakub Jirutka'
   description 'Add login with OpenId Connect as another login option'
-  version '2.0.0'
+  version '2.0.1'
   url 'https://github.com/jirutka/redmine_oidc'
   author_url 'https://github.com/jirutka'
   settings :default => {:enabled => false},
